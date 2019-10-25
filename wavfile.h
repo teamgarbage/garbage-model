@@ -31,6 +31,8 @@ typedef struct WavFile
 typedef WavFile* LPWAVFILE;
 typedef Frame* LPFRAME;
 
+void adjustNum(int *num, char sampleLen);
+LPFRAME loadWavFileData(FILE *fp, LPWAVFILE wavInfo);
 LPFRAME createEmptyHead();
 LPFRAME createListHead(int left, int right);
 LPFRAME createNode(int left, int right);
