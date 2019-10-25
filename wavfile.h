@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef struct Frame
 {
@@ -38,5 +39,8 @@ LPFRAME createListHead(int left, int right);
 LPFRAME createNode(int left, int right);
 LPFRAME addWateNode(LPFRAME tail, LPFRAME node);
 LPFRAME delWateNode(LPFRAME list, LPFRAME node);
+
+int getMaxVaule(LPFRAME list);
+int getMinVaule(LPFRAME list);
 
 int getNodeCount(LPFRAME list);

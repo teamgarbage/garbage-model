@@ -128,9 +128,11 @@ LPFRAME delWateNode(LPFRAME list, LPFRAME node)
 		{
 			it->next = node->next;
 			free(node);
-			return;
+			return list;
 		}
 	}
+
+	return list;
 } 
 
 int getNodeCount(LPFRAME list)
@@ -142,4 +144,32 @@ int getNodeCount(LPFRAME list)
 		count++;
 	}
 	return count;
+}
+
+int getMaxVaule(LPFRAME list)
+{
+	int x = list->leftSample;
+	LPFRAME it;
+	for(it = list; it!=NULL; it = it->next)
+	{
+		if(it->leftSample > x)
+		{
+			x = it->leftSample;
+		}
+	}
+	return x;
+}
+
+int getMinVaule(LPFRAME list)
+{
+	int x = list->leftSample;
+	LPFRAME it;
+	for(it = list; it!=NULL; it = it->next)
+	{
+		if(it->leftSample < x)
+		{
+			x = it->leftSample;
+		}
+	}
+	return x;
 }
