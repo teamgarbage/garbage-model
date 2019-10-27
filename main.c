@@ -1,8 +1,10 @@
 #include "main.h"
 #include "wavfile.h"
+#include "dft.h"
+
 
 // #define FILENAME "hai.wav"
-#define FILENAME "/home/alvis/desktop/sound-classification/wav/hai.wav"
+#define FILENAME "/home/alvis/desktop/sound-classification/wav/test.wav"
 
 int main()
 {
@@ -18,29 +20,36 @@ int main()
 	if(!list) return 2;
 
 	fclose(fp);
+	/* 			finished load wav data from wavfile,	data type: **link list**		*/
 
-	// printf("%d\n", getNodeCount(list));
 
-	LPFRAME it = list;
-	int i = 0;
-	long sum_l = 0;
-	long sum_r = 0;
-	while(it != NULL)
-	{
-		// printf("%8x,%8x\t", it->leftSample, it->rightSample);
-		// printf("%8d,%8d\t", it->leftSample, it->rightSample);
-		// printf("%8lf,%8lf\t", it->leftSample, it->rightSample);
-		// if(i++ % 5 == 0) putchar('\n');
-		sum_l += it->leftSample;
-		sum_r += it->rightSample;
-		it = it->next;
-	}
 
-	// printf("%ld,%ld\n", sum_l, sum_r);
-	// printf("%ld,%ld\n", sum_l/getNodeCount(list), sum_r/getNodeCount(list));
+	float *data0;		/* just take one channel data	*/
+	//float *data1;
+	int countOfSamples = getNodeCount(list);
 
-	printf("%d - %d = %d\n", getMaxVaule(list), getMinVaule(list), getMaxVaule(list) - getMinVaule(list));
+	data0 = (float*)malloc(countOfSamples*sizeof(float));
+	// data1 = (float*)malloc(n*sizeof(float));
+	if(!data0)return 2;
+	// if(!data1)return 2;
+	countOfSamples = ListToFloats(list, data0, countOfSamples, 0);
+	// n = ListToFloats(list, data1, n, 1);
+	/*			finished store data with a array of float rather then link list			*/
+
+
 	
+	Vector c0[5000];
+	// Vector c1[5000];
+	int freqBegin, freqEnd;
+	freqBegin = 0;
+	freqEnd = 5000;
+	int n_c = dft(data0, countOfSamples, c0, freqBegin, freqEnd);
+	
+	float c0l[5000];
+	abs_vector(c0, c0l, n_c);
 
+
+
+	printf("pause");
 	return 0;
 }

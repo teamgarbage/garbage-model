@@ -1,72 +1,50 @@
 #include "wavfile.h"
 
-void adjustNum(int *num, char sampleLen)
-{
-	int x, orNum;
-	switch (sampleLen)
-	{
-	case 1:
-		x = 0x80;
-		orNum = 0xFFFFFF00;
-		break;
-	case 2:
-		x = 0x8000;
-		orNum = 0xFFFF0000;
-		break;
-	case 3:
-		x = 0x800000;
-		orNum = 0xFF000000;
-	default:
-		return;
-	}
+void adjustNum(int *num, char bps){
+	if(bps == 32) return;
+	char emptybits = 32-bps;
+	*num<<=emptybits;
+	// *num/=pow(2,emptybits);
 
-	if(*num & x)
-	{
-		*num = *num | orNum;
-	}
 }
 
-LPFRAME loadWavFileData(FILE *fp, LPWAVFILE wavInfo)
-{
+LPFRAME loadWavFileData(FILE *fp, LPWAVFILE wavInfo){
 	if(!fp) return NULL;
 	if(!fread(wavInfo, sizeof(WavFile), 1, fp)) return NULL;
 	LPFRAME list = createEmptyHead();
 	LPFRAME tail = list;
 
 	int i;
-	char samplen = wavInfo->BitsPerSample/8;
-	if(wavInfo->NumChannels == 1)
-	{
-		tail->leftSample = 0;
-		while(fread(&tail->leftSample, samplen, 1, fp))
+	char sampleSizeB = wavInfo->BitsPerSample/8;
+	if(wavInfo->NumChannels == 1){
+		tail->samples[0] = 0;
+		while(fread(&tail->samples[0], sampleSizeB, 1, fp))
 		{
-			adjustNum(&tail->leftSample, samplen);
+			adjustNum(&tail->samples[0], wavInfo->BitsPerSample);
 			tail->next = (LPFRAME)malloc(sizeof(Frame));
 			tail = tail->next;
 			tail->next = NULL;
-			tail->leftSample = 0;
+			tail->samples[0] = 0;
 		}
 	}
-	else if(wavInfo->NumChannels == 2)
-	{
-		tail->leftSample = 0;
-		tail->rightSample = 0;
-		while(fread(&tail->leftSample, samplen, 1, fp))
+	else if(wavInfo->NumChannels == 2){
+		tail->samples[0] = 0;
+		tail->samples[1] = 0;
+		while(fread(&tail->samples[0], sampleSizeB, 1, fp))
 		{
-			fread(&tail->rightSample, samplen, 1, fp);
+			fread(&tail->samples[1], sampleSizeB, 1, fp);
 
-			adjustNum(&tail->leftSample, samplen);
-			adjustNum(&tail->rightSample, samplen);
+			adjustNum(&tail->samples[0], wavInfo->BitsPerSample);
+			adjustNum(&tail->samples[1], wavInfo->BitsPerSample);
 
 			tail->next = (LPFRAME)malloc(sizeof(Frame));
 			tail = tail->next;
 			tail->next = NULL;
-			tail->leftSample = 0;
-			tail->rightSample = 0;
+		tail->samples[0] = 0;
+			tail->samples[1] = 0;
 		}
 	}
-	else
-	{
+	else{
 		return NULL;
 	}
 	
@@ -74,29 +52,25 @@ LPFRAME loadWavFileData(FILE *fp, LPWAVFILE wavInfo)
 	
 }
 
-LPFRAME createEmptyHead()
-{
+LPFRAME createEmptyHead(){
 	LPFRAME node = (LPFRAME)malloc(sizeof(Frame));
 	node->next = NULL;
 	return node;
 }
 
-LPFRAME createListHead(int left, int right)
-{
+LPFRAME createListHead(int left, int right){
 	return createNode(left, right);
 }
 
-LPFRAME createNode(int left, int right)
-{
+LPFRAME createNode(int s1, int s2){
 	LPFRAME node = (LPFRAME)malloc(sizeof(Frame));
-	node->leftSample = left;
-	node->rightSample = right;
+	node->samples[0] = s1;
+	node->samples[1] = s2;
 	node->next = NULL;
 	return node;
 }
 
-LPFRAME addWateNode(LPFRAME list, LPFRAME node)
-{
+LPFRAME addWateNode(LPFRAME list, LPFRAME node){
 	if (!list)
 	{
 		return node;
@@ -110,8 +84,7 @@ LPFRAME addWateNode(LPFRAME list, LPFRAME node)
 	return list;
 }
 
-LPFRAME delWateNode(LPFRAME list, LPFRAME node)
-{
+LPFRAME delWateNode(LPFRAME list, LPFRAME node){
 	LPFRAME it;
 
 	if(list == node)
@@ -135,8 +108,7 @@ LPFRAME delWateNode(LPFRAME list, LPFRAME node)
 	return list;
 } 
 
-int getNodeCount(LPFRAME list)
-{
+int getNodeCount(LPFRAME list){
 	LPFRAME it;
 	int count = 0;
 	for(it = list; it->next!=NULL; it = it->next)
@@ -146,30 +118,49 @@ int getNodeCount(LPFRAME list)
 	return count;
 }
 
-int getMaxVaule(LPFRAME list)
-{
-	int x = list->leftSample;
+int getMaxVaule(LPFRAME list, int channel){
+	int x = list->samples[channel];
 	LPFRAME it;
 	for(it = list; it!=NULL; it = it->next)
 	{
-		if(it->leftSample > x)
+		if(it->samples[channel] > x)
 		{
-			x = it->leftSample;
+			x = it->samples[channel];
 		}
 	}
 	return x;
 }
 
-int getMinVaule(LPFRAME list)
-{
-	int x = list->leftSample;
+int getMinVaule(LPFRAME list, int channel){
+	int x = list->samples[channel];
 	LPFRAME it;
 	for(it = list; it!=NULL; it = it->next)
 	{
-		if(it->leftSample < x)
+		if(it->samples[channel] < x)
 		{
-			x = it->leftSample;
+			x = it->samples[channel];
 		}
 	}
 	return x;
+}
+
+
+int ListToFloats(LPFRAME list, float result[], int n_result, int channel){
+
+	int i;
+	int n_node = getNodeCount(list);
+
+	if(n_node < n_result){
+		n_result = n_node;
+	}
+
+	LPFRAME it = list;
+	for(i = 0; i<n_result; i++){
+		result[i] = it->samples[channel];
+		it = it->next;
+		if(!it) return i+1;
+	}
+
+	return n_result;
+
 }

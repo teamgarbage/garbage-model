@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 typedef struct Frame
 {
-	int leftSample;
-	int rightSample;
+	int samples[2];
 	
 	struct Frame* next;
 }Frame;
@@ -40,7 +40,9 @@ LPFRAME createNode(int left, int right);
 LPFRAME addWateNode(LPFRAME tail, LPFRAME node);
 LPFRAME delWateNode(LPFRAME list, LPFRAME node);
 
-int getMaxVaule(LPFRAME list);
-int getMinVaule(LPFRAME list);
+int getMaxVaule(LPFRAME list, int channel);
+int getMinVaule(LPFRAME list, int channel);
 
 int getNodeCount(LPFRAME list);
+
+int ListToFloats(LPFRAME list, float result[], int n_result, int channel);
