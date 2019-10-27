@@ -11,3 +11,4 @@ typedef struct vector{
 int dft(float input[], int n_input, Vector output[], int c_begin, int c_end);
 float vabs(Vector v);
 void abs_vector(Vector input[], float output[], int n);
+void normalize(float input[], float output[], int n);

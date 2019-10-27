@@ -28,3 +28,24 @@ void abs_vector(Vector input[], float output[], int n){
 		output[n] = sqrt(pow(input[n].image,2) + pow(input[n].real, 2));
 	}
 }
+
+void normalize(float input[], float output[], int n){
+	int i;
+	float sigma, min;	// temporarily be used to store the max value.
+	sigma = input[0];
+	min = input[1];
+	for(i = 0; i<n; i++){
+		if(input[i] > sigma) {
+			sigma = input[i];
+			continue;
+		}
+		if(input[i] < min) min = input[i];
+	}
+
+	sigma -= min;
+
+	for(i = 0; i<n; i++){
+		output[i] = (input[i]-min)/sigma;
+	}
+
+}
